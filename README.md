@@ -155,7 +155,7 @@ python main.py --mode 'query_localize' --query_text 'Au NRs'
 
 ```
 cd ChatChemPaper
-python main.py --mode 'query_extract' --query_text 'Au NRs' --extract_pdf_path '{your pdf path}'
+python main.py --mode 'query_extract' --query_text 'Au NRs' --root_extract_paper '{your pdf path}'
 ```
 
 ## 💗 Acknowledgements
