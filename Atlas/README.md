@@ -2,6 +2,7 @@
 
 ```
 conda create --name atlas-env python=3.11 -y
+conda activate atlas-env
 ```
 
 ### 2. Install atlas & olympus

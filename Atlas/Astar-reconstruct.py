@@ -5,6 +5,8 @@ from tqdm import tqdm
 from pathlib import Path
 import matplotlib.pyplot as plt
 
+from preprocess import txt_to_df
+
 
 class Astar_LSPR:
     def __init__(self, root_data: Path, seed: int=123):
@@ -140,6 +142,7 @@ class Astar_LSPR:
         return data.loc[idx, 'si_ucb'] == self.default_value
 
     def vis_hist(self, col_name: str):
+        print(self.raw_data)
         self.raw_data.plot.hist(y=col_name, bins=100)
         plt.show()
 
@@ -212,9 +215,75 @@ class Astar_RATIO(Astar_LSPR):
         return z
 
 
+class Astar_LSPR_new(Astar_LSPR):
+    def __init__(self, root_txt: Path, seed: int=123):
+        self.seed_everything(seed)
+        root_txt = Path(root_txt)
+        self.raw_data = self.preprocess(root_txt)
+
+    def preprocess(self, root_txt: Path) -> pd.DataFrame:
+        data = txt_to_df(root_txt)
+        data = data.sort_values(by='2nd_peak_wave', ascending=True)
+        data = data.reset_index(drop=True)
+        return data
+
+    def run_once(self, target, delta_cnt=5, HCL_thres=0.06, AgNO3_thres=0.06, Crystal_thres=0.06):
+        cur_step = 1
+        data = self.init_astar(select_near=1, select_far=5, target=target, thres=70)
+        while cur_step < self.max_step_early_stopping and data['is_open'].sum() > 0:
+            # print(f"[STEP {cur_step}] ---------------")
+            data_ch = self.find_path(data, col='si_ucb', topk=1)
+            data, real_peak_wave = self.update_zi(data, data_ch, cur_step, target)
+            flag = False
+            for wave in real_peak_wave:
+                if abs(wave - target) < self.max_thres:
+                    flag = True
+                    break
+            if flag:
+                break
+            data = self.update_si(data, data_ch, delta_cnt, HCL_thres, AgNO3_thres)
+            data = self.update_ucb(data, cur_step)
+            cur_step += 1
+        if flag and cur_step < self.max_step_in_all_run:
+            Path('./output').mkdir(parents=True, exist_ok=True)
+            root_save = Path(f'./output/{self.__class__.__name__}_{target}.xlsx')
+            data[data['is_close']==1].sort_values(by='step', ascending=True).to_excel(root_save, header=True, index=False)
+            self.max_step_in_all_run = cur_step
+
+    def update_si(self, data: pd.DataFrame, data_ch: pd.DataFrame, 
+                  delta_cnt=5, HCL_thres=0.06, AgNO3_thres=0.06, Crystal_thres=0.06):
+        cnt = 0
+        for ch_idx in data_ch.index.values:
+            idx = ch_idx - 1
+            ch_zi = data.loc[ch_idx, 'zi']
+            while cnt < delta_cnt and idx >= 0 \
+                and abs(data.loc[idx, '3.6542M 盐酸/mL']-data_ch.loc[ch_idx,'3.6542M 盐酸/mL']) < HCL_thres \
+                and abs(data.loc[idx, '4mM AgNO3/mL']-data_ch.loc[ch_idx,'4mM AgNO3/mL']) < AgNO3_thres \
+                and abs(data.loc[idx, '晶种/mL']-data_ch.loc[ch_idx,'晶种/mL']) < Crystal_thres:
+                if data.loc[idx, 'is_close'] == 0:
+                    self.update_si_sn(data, idx, ch_zi)
+                    cnt += 1
+                idx -= 1
+            cnt = 0
+            idx = ch_idx + 1
+            while cnt < delta_cnt and idx < len(data)\
+                and abs(data.loc[idx, '3.6542M 盐酸/mL']-data_ch.loc[ch_idx,'3.6542M 盐酸/mL']) < HCL_thres \
+                and abs(data.loc[idx, '4mM AgNO3/mL']-data_ch.loc[ch_idx,'4mM AgNO3/mL']) < AgNO3_thres\
+                and abs(data.loc[idx, '晶种/mL']-data_ch.loc[ch_idx,'晶种/mL']) < Crystal_thres:
+                if data.loc[idx, 'is_close'] == 0:
+                    self.update_si_sn(data, idx, ch_zi)
+                    cnt += 1
+                idx += 1
+        return data
+
+
 if __name__ == '__main__':
-    root_data = './data/20230320_20230628_result.xlsx'
-    astar = Astar_LSPR(root_data)
-    # astar.run(epoch=30)
+    # root_txt = './初始数据/目标：LSPR = 670 nm/20230331-2.txt'
+    # astar = Astar_LSPR_new(root_txt)
+    root_txt = './初始数据/目标：LSPR = 780 nm/20230423-2.txt'
+    astar = Astar_LSPR_new(root_txt)
+    # root_txt = './初始数据/目标：LSPR = 820 nm/20230505-1.txt'
+    # astar = Astar_LSPR_new(root_txt)
+    astar.run([670])
     astar.vis_hist('2nd_peak_wave')
 
