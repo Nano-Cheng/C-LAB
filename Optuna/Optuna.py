@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import random
+from datetime import datetime
 
 
 class Optuna_LSPR:
-    def __init__(self, root_data: Path, seed: int = 14):
+    def __init__(self, root_data: Path, seed: int = 123):
         self.seed = seed
         self.seed_everything()
         root_data = Path(root_data)
@@ -18,7 +19,9 @@ class Optuna_LSPR:
         np.random.seed(self.seed)
 
     def preprocess(self, data: pd.DataFrame) -> pd.DataFrame:
-        data = data[(data['wave_name']<'20230501') & (data['2nd_peak_wave'] >0) & (data['label']=='H')]
+        # data = data[(data['wave_name']<'20230501') & (data['2nd_peak_wave'] >0) & (data['label']=='H')]
+        data = data[data['2nd_peak_wave'] >0]
+
         data = data.sort_values(by='2nd_peak_wave', ascending=True)
         data = data.reset_index(drop=True)
         return data
@@ -31,11 +34,15 @@ class Optuna_LSPR:
         HCL = trial.suggest_float('HCL', 
                                 self.raw_data['3.6542M 盐酸/mL'].min(),
                                 self.raw_data['3.6542M 盐酸/mL'].max())
+        Seed = trial.suggest_float('Seed',
+                                self.raw_data['晶种/mL'].min(),
+                                self.raw_data['晶种/mL'].max())
 
         # Find the closest experimental data point
         distances = np.sqrt(
             (self.raw_data['4mM AgNO3/mL'] - AgNO3)**2 + 
-            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2
+            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2 +
+            (self.raw_data['晶种/mL'] - Seed)**2
         )
         nearest_idx = distances.argmin()
         nearest_peak = self.raw_data.iloc[nearest_idx]['2nd_peak_wave']
@@ -49,6 +56,7 @@ class Optuna_LSPR:
         trial.set_user_attr('peak_wave', nearest_peak)
         trial.set_user_attr('AgNO3_real', self.raw_data.iloc[nearest_idx]['4mM AgNO3/mL'])
         trial.set_user_attr('HCL_real', self.raw_data.iloc[nearest_idx]['3.6542M 盐酸/mL'])
+        trial.set_user_attr('Seed_real', self.raw_data.iloc[nearest_idx]['晶种/mL'])
         
         return score
 
@@ -85,11 +93,13 @@ class Optuna_LSPR:
         trials_df['peak_wave'] = [t.user_attrs.get('peak_wave') for t in study.trials]
         trials_df['AgNO3_real'] = [t.user_attrs.get('AgNO3_real') for t in study.trials]
         trials_df['HCL_real'] = [t.user_attrs.get('HCL_real') for t in study.trials]
+        trials_df['Seed_real'] = [t.user_attrs.get('Seed_real') for t in study.trials]
         trials_df['nearst'] = [t.user_attrs.get('nearst') for t in study.trials]
         
         # Save results
         Path('./output').mkdir(parents=True, exist_ok=True)
-        trials_df.to_excel(f'./output/{self.__class__.__name__}_{target}.xlsx', index=False)
+        timestamp = datetime.now().strftime("%Y%m%d")
+        trials_df.to_excel(f'./output/{target}-{timestamp}.xlsx', index=False)
 
 
 class Optuna_FWHM(Optuna_LSPR):
@@ -100,10 +110,14 @@ class Optuna_FWHM(Optuna_LSPR):
         HCL = trial.suggest_float('HCL', 
                                 self.raw_data['3.6542M 盐酸/mL'].min(),
                                 self.raw_data['3.6542M 盐酸/mL'].max())
+        Seed = trial.suggest_float('Seed',
+                                self.raw_data['晶种/mL'].min(),
+                                self.raw_data['晶种/mL'].max())
 
         distances = np.sqrt(
             (self.raw_data['4mM AgNO3/mL'] - AgNO3)**2 + 
-            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2
+            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2 +
+            (self.raw_data['晶种/mL'] - Seed)**2
         )
         nearest_idx = distances.argmin()
         nearest_peak = self.raw_data.iloc[nearest_idx]['2nd_peak_wave']
@@ -114,6 +128,7 @@ class Optuna_FWHM(Optuna_LSPR):
         trial.set_user_attr('peak_wave', nearest_peak)
         trial.set_user_attr('AgNO3_real', self.raw_data.iloc[nearest_idx]['4mM AgNO3/mL'])
         trial.set_user_attr('HCL_real', self.raw_data.iloc[nearest_idx]['3.6542M 盐酸/mL'])
+        trial.set_user_attr('Seed_real', self.raw_data.iloc[nearest_idx]['晶种/mL'])
         
         return score
 
@@ -126,10 +141,14 @@ class Optuna_RATIO(Optuna_LSPR):
         HCL = trial.suggest_float('HCL', 
                                 self.raw_data['3.6542M 盐酸/mL'].min(),
                                 self.raw_data['3.6542M 盐酸/mL'].max())
+        Seed = trial.suggest_float('Seed',
+                                self.raw_data['晶种/mL'].min(),
+                                self.raw_data['晶种/mL'].max())
 
         distances = np.sqrt(
             (self.raw_data['4mM AgNO3/mL'] - AgNO3)**2 + 
-            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2
+            (self.raw_data['3.6542M 盐酸/mL'] - HCL)**2 +
+            (self.raw_data['晶种/mL'] - Seed)**2
         )
         nearest_idx = distances.argmin()
         nearest_peak = self.raw_data.iloc[nearest_idx]['2nd_peak_wave']
@@ -139,12 +158,13 @@ class Optuna_RATIO(Optuna_LSPR):
         trial.set_user_attr('peak_wave', nearest_peak)
         trial.set_user_attr('AgNO3_real', self.raw_data.iloc[nearest_idx]['4mM AgNO3/mL'])
         trial.set_user_attr('HCL_real', self.raw_data.iloc[nearest_idx]['3.6542M 盐酸/mL'])
+        trial.set_user_attr('Seed_real', self.raw_data.iloc[nearest_idx]['晶种/mL'])
         
         return score
 
 
 if __name__ == '__main__':
-    root_data = './data/20230320_20230628_result.xlsx'
+    root_data = './初始数据/目标：LSPR = 820 nm/20230505-1.xlsx'
     
-    optimizer = Optuna_FWHM(root_data)
-    study = optimizer.run(target=650, n_trials=100)
+    optimizer = Optuna_LSPR(root_data)
+    study = optimizer.run(target=820, n_trials=100)
