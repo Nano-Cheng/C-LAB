@@ -47,21 +47,24 @@
   Liang Yang<sup>e</sup>
 </span>,
 <span class="author-block">
+  Yunhong Wang<sup>c</sup>
+</span>,
+<span class="author-block">
   Guangxu Chen<sup>a*</sup>
 </span>
 </div>
 
-- **a.** School of Environment and Energy, State Key Laboratory of Luminescent Materials and Devices, Guangdong Provincial Key Laboratory of Atmospheric Environment and Pollution Control, South China University of Technology
+- **a.** School of Environment and Energy, State Key Laboratory of Luminescent Materials and Devices, Guangdong Provincial Key Laboratory of Atmospheric Environment and Pollution Control, South China University of Technology, Guangzhou 510006, China.
 
 - b. Zhuhai Fengze Information Technology Co., Ltd., Zhuhai 519000, China.
 
-- c. School of Computer Science and Engineering, Beihang University, Beijing, 100191, China
+- c. School of Computer Science and Engineering, Beihang University, Beijing, 100191, China.
 
-- d. Guangzhou Inlab, Guangzhou 510530, China.
+- d. Guangzhou Ingenious Laboratory Technology Co., Ltd., Guangzhou 510530, China.
 
-- e. School of Artificial Intelligence, Hebei University of Technology, Tianjin, 300401, China
+- e. School of Artificial Intelligence, Hebei University of Technology, Tianjin, 300401, China.
 
-  F. G., H. L. and Z.L. contributed to this work equally.
+†F. G., H. L., and Z.L. contributed equally to this work.
 
 Email: cgx08@scut.edu.cn; zmliu@buaa.edu.cn
 
