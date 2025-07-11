@@ -173,7 +173,7 @@ If you find our work helpful for your research, please cite:
 @article{gao2025nanoparticles,
   author={Fan Gao, Hongqiang Li, Zhilong Chen, Yunai Yi, Shihao Nie, Zihao Cheng, Zeming Liu, Yuanfang Guo, Shumin Liu, Qizhen Qin, Zhengjian Li, Lisong Zhang, Han Hu, Cunjin Li, Liang Yang, Yunhong Wang, and Guangxu Chen},
   title={A chemical autonomous robotic platform for end-to-end synthesis of metallic nanoparticles},
-  howpublished={[\url{https://github.com/Nano-Cheng/C-LAB}](https://github.com/Nano-Cheng/C-LAB)},
+  url={https://github.com/Nano-Cheng/C-LAB},
   doi={10.5281/zenodo.15674589},
   year={2025}
 }
