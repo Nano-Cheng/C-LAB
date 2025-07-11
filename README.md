@@ -1,4 +1,4 @@
-## 📋 **A chemical autonomous robotic platform for the synthesis of nanoparticles**
+## 📋 **A chemical autonomous robotic platform for end-to-end synthesis of nanoparticles**
 
 <div>
 <span class="author-block">
